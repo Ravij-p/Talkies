@@ -8,12 +8,15 @@ img{
     justify-content: space-between;
     align-items: center;
 }
+.abc{
+    background-color: #0c6474;
+    display: flex;
+}
 #setting{
     position: relative;
     right:15px;
-    border:none;
     background-color: #0c6474;
-    color: #fbd4de;
+    border: none;
 }
 .navbar{
     width:100vw;
@@ -25,5 +28,7 @@ img{
 .nav{
     background-color: #0c6474;
     border:none;
-    color:#fbd4de;
+    color:#f8d4ce;
 }
+
+  
