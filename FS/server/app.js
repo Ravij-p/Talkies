@@ -118,16 +118,18 @@ app.put("/api/profilePic", authenticate, async (req, res) => {
 });
 app.post("/api/new-post", authenticate, async (req, res) => {
   try {
-    const { caption, desc, url } = req.body;
+    const { caption, desc, url, isVideo } = req.body;
     const { user } = req;
     if (!caption || !desc || !url) {
       res.status(400).send("Please fill all the fields");
     }
+    console.log(isVideo);
     const createPost = await Post.create({
       caption,
       description: desc,
       image: url,
       user: user._id,
+      isVideo: isVideo,
     });
     const updatedUser = await Users.findOneAndUpdate(
       { _id: user._id },
@@ -161,7 +163,7 @@ app.get("/api/profile", authenticate, async (req, res) => {
 app.get("/api/posts", authenticate, async (req, res) => {
   try {
     const { user } = req;
-    const followers = await Contacts.find({ followedId: user._id });
+    const followers = await Contacts.find({ followerId: user._id });
     const post1 = [];
     const ownPost = await Post.find({ user: user._id }).populate(
       "user",
@@ -172,7 +174,7 @@ app.get("/api/posts", authenticate, async (req, res) => {
       post1.push(post);
     });
     for (const obj of followers) {
-      const objId = obj.followerId;
+      const objId = obj.followedId;
       console.log("obj", objId);
       try {
         const posts = await Post.find({ user: objId }).populate(
@@ -186,7 +188,6 @@ app.get("/api/posts", authenticate, async (req, res) => {
         console.error("Error fetching posts:", error);
       }
     }
-
     console.log("sent");
     res.status(200).json({ post1, user });
   } catch (error) {

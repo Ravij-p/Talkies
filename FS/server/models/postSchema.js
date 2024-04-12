@@ -39,6 +39,9 @@ const postSchema = new mongoose.Schema({
       ref: "USER",
     },
   ],
+  isVideo: {
+    type: Boolean,
+  },
 });
 const Post = new mongoose.model("POST", postSchema);
 module.exports = Post;
