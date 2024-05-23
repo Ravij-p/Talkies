@@ -78,14 +78,8 @@ Visit `http://localhost:3000` to see the application in action.
 10. **Dark Mode**: Switch between light and dark themes for better user experience.
 11. **Search**: Search for users and posts within the platform.
 
-## Screenshots
-Include some screenshots of your project to give potential users an idea of what the application looks like.
-
 ## Contributing
 Contributions are welcome! Please fork the repository and submit a pull request for review.
-
-## Acknowledgements
-Special thanks to [Name] for their guidance and support in developing this project, particularly in the areas of user authentication and UI design.
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
