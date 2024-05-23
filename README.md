@@ -21,7 +21,7 @@ This project is a social media clone that replicates some of the key functionali
 - **Deployment**: Preparing the application for deployment to a cloud platform.
 
 ## Technologies Used
-- **Frontend**: React, Redux
+- **Frontend**: React
 - **Backend**: Node.js, Express.js
 - **Database**: MongoDB
 - **Authentication**: JSON Web Tokens (JWT)
