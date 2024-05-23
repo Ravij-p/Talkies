@@ -37,38 +37,31 @@ This project is a social media clone that replicates some of the key functionali
 
 ### Clone the Repository
 ```bash
-git clone https://github.com/yourusername/social-media-clone.git
-cd social-media-clone
+git clone https://github.com/Ravij-p/Talkies.git
+cd Talkies
 ```
 
 ### Install Dependencies
 ```bash
 # For backend
-cd backend
+cd server
 npm install
 
 # For frontend
-cd ../frontend
+cd ../talkies
 npm install
-```
 
-### Configure Environment Variables
-Create a `.env` file in the `backend` directory and add the following:
-```
-MONGO_URI=your_mongodb_uri
-JWT_SECRET=your_jwt_secret
-PORT=5000
 ```
 
 ### Run the Application
 ```bash
-# Run backend server
-cd backend
+# Run frontend server
+cd talkies
 npm start
 
-# Run frontend development server
-cd ../frontend
-npm start
+# Run backend development server
+cd ../server
+npm run dev
 ```
 Visit `http://localhost:3000` to see the application in action.
 
