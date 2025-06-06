@@ -1,11 +1,14 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const bcryptjs = require("bcryptjs");
+const http = require("http");
 const jwt = require("jsonwebtoken");
+const { Server } = require("socket.io");
 const cors = require("cors");
 const app = express();
 const Users = require("./models/userSchema");
 const Post = require("./models/postSchema");
+const Msg = require("./models/msg");
 const Contacts = require("./models/contactSchema");
 const nodemailer = require("nodemailer");
 const bodyParser = require("body-parser");
@@ -13,6 +16,9 @@ const bcrypt = require("bcrypt");
 const userOTPverification = require("./models/userOTPverification");
 require("./db/connection");
 const authenticate = require("./middleware/auth");
+const mongoose = require("mongoose");
+const msg = require("./models/msg");
+const { Timestamp } = require("mongodb");
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -21,6 +27,130 @@ const port = process.env.PORT || 8000;
 
 app.get("/", (req, res) => {
   res.send("Hello world");
+});
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+  },
+});
+
+app.use(cors());
+app.use(express.json());
+app.use(cookieParser());
+
+const PORT = process.env.PORT || 8000;
+
+const onlineUsers = new Map();
+io.on("connection", (socket) => {
+  socket.on("add-user", (userId) => {
+    onlineUsers.set(userId, socket.id);
+  });
+
+  socket.on("send-message", async ({ senderId, receiverId, msg }) => {
+    const newMsg = await Msg.create({
+      sender: senderId,
+      receiver: receiverId,
+      msg,
+      timestamp: Date.now(),
+    });
+
+    const receiverSocket = onlineUsers.get(receiverId);
+    if (receiverSocket) {
+      io.to(receiverSocket).emit("receive-message", newMsg);
+    }
+    socket.emit("receive-message", newMsg); // confirm to sender
+  });
+
+  socket.on("load_messages", async ({ userId, otherUserId }) => {
+    try {
+      const messages = await Msg.find({
+        $or: [
+          { sender: userId, receiver: otherUserId },
+          { sender: otherUserId, receiver: userId },
+        ],
+      }).sort({ timestamp: 1 });
+
+      socket.emit("messages_loaded", messages);
+    } catch (err) {
+      console.error("Error loading messages:", err);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    for (const [uid, sid] of onlineUsers.entries()) {
+      if (sid === socket.id) {
+        onlineUsers.delete(uid);
+        break;
+      }
+    }
+  });
+});
+app.post("/api/sendMsg", authenticate, async (req, res) => {
+  try {
+    const { user } = req;
+    const { msg, receiverId } = req.body;
+    console.log("msg", msg, "id", receiverId);
+
+    const newMsg = await Msg.create({
+      sender: user._id,
+      receiver: receiverId,
+      msg: msg,
+      timestamp: Date.now(),
+    });
+    return res.status(200).send("done");
+  } catch (e) {
+    console.log(e);
+  }
+});
+app.post("/api/getMsg", authenticate, async (req, res) => {
+  try {
+    const { user } = req;
+    const receiverId = req.body.receiverId;
+    console.log("reciever Id", receiverId);
+
+    const msgs = await Msg.find({
+      $or: [
+        { sender: user._id, receiver: receiverId },
+        { sender: receiverId, receiver: user._id },
+      ],
+    }).sort({ timestamp: -1 });
+    return res.status(200).json({ msgs });
+  } catch (e) {
+    console.log(e);
+  }
+});
+app.get("/api/userList", authenticate, async (req, res) => {
+  try {
+    const { user } = req;
+    const lists = await Contacts.find({
+      followerId: user._id,
+      isMsg: true,
+    }).populate("followerId", "profilePic userName");
+    return res.status(200).json({ lists, user });
+  } catch (err) {
+    console.log(err);
+  }
+});
+app.post("/api/newChat", authenticate, async (req, res) => {
+  try {
+    const { user } = req;
+    const search = req.body.search || "";
+    const usersFollowingMe = await Contacts.find({
+      followedId: user._id,
+    }).select("followerId");
+    console.log(usersFollowingMe);
+    const UsersAll = await Users.find({
+      $or: [
+        { userName: { $regex: search, $options: "i" } },
+        { _id: { $in: usersFollowingMe.followerId } },
+      ],
+    });
+    res.status(200).json({ UsersAll });
+  } catch (e) {
+    console.log(e);
+  }
 });
 app.post("/api/search", authenticate, async (req, res) => {
   try {
@@ -71,6 +201,9 @@ app.post("/api/sendOTP", async (req, res, next) => {
     console.log(error, "error");
     res.status(500).send("Server Error");
   }
+});
+server.listen(5000, () => {
+  console.log("Server listening on port 8000");
 });
 app.post("/api/verifyOTP", async (req, res, next) => {
   try {

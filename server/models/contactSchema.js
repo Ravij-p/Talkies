@@ -8,6 +8,10 @@ const contactSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "USER",
   },
+  isMsg: {
+    type: Boolean,
+    default: false,
+  },
 });
 const Contacts = new mongoose.model("CONTACT", contactSchema);
 module.exports = Contacts;
